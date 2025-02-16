@@ -25,7 +25,7 @@ EPD_SCREENS = {
     "epd4in2": (400, 300),
     "epd4in3": (800, 600),
     "epd5in65": (600, 448),  # Emulator uses this
-    "epd5in65f": (600, 448), # Real ePaper uses this
+    "epd5in65f": (600, 448),  # Real ePaper uses this
     "epd5in83": (648, 480),
     "epd6in0": (800, 600),
     "epd6in2": (1448, 1072),
@@ -54,6 +54,9 @@ def get_config():
     # Ensure Tkinter mode is correctly loaded
     use_tkinter = os.getenv("USE_TKINTER", "false").lower() == "true"
 
+    # Ensure Shutdown mode is correctly loaded
+    shutdown_after_run = os.getenv("SHUTDOWN_AFTER_RUN", "false").lower() == "true"
+
     # Automatically adjust display key based on simulator mode
     if use_simulator and args.display == "epd5in65f":
         display_model = "epd5in65"  # Use emulator key
@@ -67,7 +70,8 @@ def get_config():
         "DISPLAY_MODEL": display_model,
         "TARGET_SIZE": EPD_SCREENS[display_model],
         "USE_SIMULATOR": use_simulator,
-        "USE_TKINTER": use_tkinter,  # Added to ensure Tkinter is read
+        "USE_TKINTER": use_tkinter,  # Ensure Tkinter is read
+        "SHUTDOWN_AFTER_RUN": shutdown_after_run,  # Ensure Shutdown mode is read
         "LOCAL_IMAGE_DIR": os.getenv("LOCAL_IMAGE_DIR", "/mnt/photos"),
         "DRIVE_FOLDER_ID": os.getenv("GOOGLE_DRIVE_FOLDER_ID"),
         "SERVICE_ACCOUNT_FILE": os.getenv("GOOGLE_SERVICE_ACCOUNT"),
