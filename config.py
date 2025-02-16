@@ -7,6 +7,11 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+# Load secrets from .secrets file (if exists)
+secrets_path = ".secrets"
+if os.path.exists(secrets_path):
+    load_dotenv(secrets_path)
+
 # Supported ePaper displays and their resolutions
 EPD_SCREENS = {
     "epd1in54": (200, 200),
@@ -60,8 +65,8 @@ def get_config():
         "TARGET_SIZE": EPD_SCREENS[display_model],
         "USE_SIMULATOR": use_simulator,
         "LOCAL_IMAGE_DIR": os.getenv("LOCAL_IMAGE_DIR", "/mnt/photos"),
-        "DRIVE_FOLDER_ID": os.getenv("GOOGLE_DRIVE_FOLDER_ID", ""),
-        "SERVICE_ACCOUNT_FILE": os.getenv("GOOGLE_SERVICE_ACCOUNT", "credentials.json"),
+        "DRIVE_FOLDER_ID": os.getenv("GOOGLE_DRIVE_FOLDER_ID"),  # Now loaded from `.secrets`
+        "SERVICE_ACCOUNT_FILE": os.getenv("GOOGLE_SERVICE_ACCOUNT"),  # Now loaded from `.secrets`
     }
 
 CONFIG = get_config()
