@@ -1,6 +1,7 @@
 import time
 import importlib
 import io
+import subprocess
 from PIL import Image, ImageOps
 from config import CONFIG
 from image_source import get_random_image
@@ -8,9 +9,9 @@ from image_source import get_random_image
 # Import appropriate ePaper display driver dynamically
 if CONFIG["USE_SIMULATOR"]:
     from epd_emulator import epdemulator
-    USE_TKINTER = CONFIG.get("USE_TKINTER", False)  # Set this in .env (True for GUI, False for Flask)
+    USE_TKINTER = CONFIG["USE_TKINTER"]  # Ensures Tkinter is read properly
 
-    print(f"Using EPD Emulator ({'Tkinter' if USE_TKINTER else 'Flask'} Mode)")
+    print(f"📡 Using EPD Emulator ({'Tkinter' if USE_TKINTER else 'Flask'} Mode)")
     epd = epdemulator.EPD(
         config_file=CONFIG["DISPLAY_MODEL"],
         use_tkinter=USE_TKINTER,
@@ -19,7 +20,7 @@ if CONFIG["USE_SIMULATOR"]:
         reverse_orientation=False
     )
 else:
-    print(f"Using real Waveshare ePaper display: {CONFIG['DISPLAY_MODEL']}")
+    print(f"📡 Using real Waveshare ePaper display: {CONFIG['DISPLAY_MODEL']}")
     epd_module = importlib.import_module(f"waveshare_epd.{CONFIG['DISPLAY_MODEL']}")
     epd = epd_module.EPD()
 
@@ -106,11 +107,12 @@ def main():
         buffer = img
         epd.display(buffer)
 
-    if not CONFIG["USE_SIMULATOR"]:
-        time.sleep(5)
-        epd.sleep()
+    # Shutdown logic
+    if CONFIG["SHUTDOWN_AFTER_RUN"]:
         print("⏳ Scheduling Shutdown in 5 Minutes. To cancel, run: sudo shutdown -c")
-        # subprocess.call(["sudo", "shutdown", "-h", "+5"])
+        subprocess.call(["sudo", "shutdown", "-h", "+5"])
+    else:
+        print("🟢 SHUTDOWN_AFTER_RUN is disabled. Display will remain on.")
 
 if __name__ == "__main__":
     main()

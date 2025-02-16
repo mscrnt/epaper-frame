@@ -51,6 +51,9 @@ def get_config():
     # Determine if using the simulator
     use_simulator = args.simulator or os.getenv("USE_SIMULATOR", "false").lower() == "true"
 
+    # Ensure Tkinter mode is correctly loaded
+    use_tkinter = os.getenv("USE_TKINTER", "false").lower() == "true"
+
     # Automatically adjust display key based on simulator mode
     if use_simulator and args.display == "epd5in65f":
         display_model = "epd5in65"  # Use emulator key
@@ -64,9 +67,10 @@ def get_config():
         "DISPLAY_MODEL": display_model,
         "TARGET_SIZE": EPD_SCREENS[display_model],
         "USE_SIMULATOR": use_simulator,
+        "USE_TKINTER": use_tkinter,  # Added to ensure Tkinter is read
         "LOCAL_IMAGE_DIR": os.getenv("LOCAL_IMAGE_DIR", "/mnt/photos"),
-        "DRIVE_FOLDER_ID": os.getenv("GOOGLE_DRIVE_FOLDER_ID"),  # Now loaded from `.secrets`
-        "SERVICE_ACCOUNT_FILE": os.getenv("GOOGLE_SERVICE_ACCOUNT"),  # Now loaded from `.secrets`
+        "DRIVE_FOLDER_ID": os.getenv("GOOGLE_DRIVE_FOLDER_ID"),
+        "SERVICE_ACCOUNT_FILE": os.getenv("GOOGLE_SERVICE_ACCOUNT"),
     }
 
 CONFIG = get_config()
