@@ -110,7 +110,7 @@ sudo shutdown -c
 Or update `.env`:
 ```bash
 nano .env
-# Change SHUTDOWN_AFTER_RUN=false
+SHUTDOWN_AFTER_RUN=false
 ```
 
 ---
