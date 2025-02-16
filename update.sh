@@ -29,12 +29,5 @@ if [ ! -d "$PROJECT_DIR/config" ]; then
     mkdir -p "$PROJECT_DIR/config"
 fi
 
-# Restart the display service (optional)
-if systemctl list-units --full -all | grep -q "epaper.service"; then
-    echo "🔄 Restarting ePaper display service..."
-    sudo systemctl restart epaper.service
-else
-    echo "⚠ No epaper.service found. Skipping restart."
-fi
 
 echo "✅ Update complete!"
