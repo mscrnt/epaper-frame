@@ -1,5 +1,3 @@
-#path ./display.py
-
 import time
 import importlib
 import io
@@ -11,7 +9,7 @@ from image_source import get_random_image
 if CONFIG["USE_SIMULATOR"]:
     from epd_emulator import epdemulator
     USE_TKINTER = CONFIG.get("USE_TKINTER", False)  # Set this in .env (True for GUI, False for Flask)
-    
+
     print(f"Using EPD Emulator ({'Tkinter' if USE_TKINTER else 'Flask'} Mode)")
     epd = epdemulator.EPD(
         config_file=CONFIG["DISPLAY_MODEL"],
@@ -26,8 +24,10 @@ else:
     epd = epd_module.EPD()
 
 # Initialize ePaper display
+print("✅ Initializing EPD Display...")
 epd.init()
 epd.Clear(255)  # Provide required color argument
+print("✅ EPD Display Cleared")
 
 # Define 7-color palette
 palette_image = Image.new("P", (1, 1))
@@ -37,20 +37,25 @@ palette_image.putpalette((
 
 def preprocess_image(image_data):
     """Process image for display, resizing, rotating, and quantizing."""
+    print("🔄 Preprocessing Image...")
     try:
-        # Ensure `image_data` is an Image object
         if isinstance(image_data, str):  # If it's a file path, open it
+            print(f"📂 Opening Local Image: {image_data}")
             img = Image.open(image_data)
         elif isinstance(image_data, io.BytesIO):  # If streamed from Google Drive
+            print("📡 Opening Image from Google Drive")
             img = Image.open(image_data)
         else:
             raise ValueError("Unsupported image format")
 
     except Exception as e:
-        print(f"Error opening image: {e}")
+        print(f"❌ Error opening image: {e}")
         return None
 
+    print(f"📏 Original Image Size: {img.size}, Mode: {img.mode}")
+
     if img.mode in ('RGBA', 'LA'):
+        print("🎨 Converting RGBA/LA Image to RGB")
         background = Image.new("RGB", img.size, (255, 255, 255))
         background.paste(img, mask=img.split()[3])
         img = background
@@ -64,41 +69,47 @@ def preprocess_image(image_data):
     target_w, target_h = CONFIG["TARGET_SIZE"]
     scale_normal = min(target_w / w, target_h / h)
     scale_rotated = min(target_w / h, target_h / w)
+
     if scale_rotated > scale_normal:
+        print("🔄 Rotating Image for Better Fit")
         img = img.rotate(90, expand=True)
 
     img = ImageOps.pad(img, CONFIG["TARGET_SIZE"], color=(255, 255, 255))
     img = img.quantize(palette=palette_image)
 
+    print(f"✅ Image Processed. Final Size: {img.size}")
     return img
 
 def main():
     """Main function to handle image selection, processing, and display."""
-    print(f"Using display: {CONFIG['DISPLAY_MODEL']}, Resolution: {CONFIG['TARGET_SIZE']}, Simulator: {CONFIG['USE_SIMULATOR']}")
+    print(f"📺 Using Display: {CONFIG['DISPLAY_MODEL']}, Resolution: {CONFIG['TARGET_SIZE']}, Simulator: {CONFIG['USE_SIMULATOR']}")
 
     image_data = get_random_image()
     if image_data is None:
-        print("No image to display. Exiting.")
+        print("❌ No image to display. Exiting.")
         return
 
     img = preprocess_image(image_data)
     if img is None:
-        print("Failed to preprocess image. Exiting.")
+        print("❌ Failed to preprocess image. Exiting.")
         return
 
     # Convert the processed image into the display buffer
     if CONFIG["USE_SIMULATOR"]:
-        epd.paste_image(img, (0, 0, CONFIG["TARGET_SIZE"][0], CONFIG["TARGET_SIZE"][1]))  # Pass actual `Image` object
-        epd.display(epd.get_frame_buffer(epd.draw))  # Emulator expects a draw buffer
-        print("Emulator updated.")
+        print("🔄 Pasting Image onto EPD Emulator...")
+        epd.paste_image(img, (0, 0, CONFIG["TARGET_SIZE"][0], CONFIG["TARGET_SIZE"][1]))
+        print("📡 Displaying Image on Emulator...")
+        epd.display(img)
+        print("✅ Emulator Updated.")
     else:
-        buffer = epd.getbuffer(img)
+        print("📡 Displaying Image on Real EPD Display...")
+        buffer = img
         epd.display(buffer)
 
     if not CONFIG["USE_SIMULATOR"]:
         time.sleep(5)
         epd.sleep()
-        print("Scheduling shutdown in 5 minutes. To cancel, run: sudo shutdown -c")
+        print("⏳ Scheduling Shutdown in 5 Minutes. To cancel, run: sudo shutdown -c")
         # subprocess.call(["sudo", "shutdown", "-h", "+5"])
 
 if __name__ == "__main__":
