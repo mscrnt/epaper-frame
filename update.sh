@@ -4,6 +4,16 @@
 REPO_URL="https://github.com/mscrnt/epepar-frame.git"
 PROJECT_DIR="$(dirname "$(realpath "$0")")"
 
+echo "🌐 Waiting for internet connection..."
+
+# Loop until internet is available (ping Google's public DNS)
+while ! ping -c 1 -W 3 google.com &> /dev/null; do
+    echo "🔄 No internet connection. Retrying in 10 seconds..."
+    sleep 10
+done
+
+echo "✅ Internet connection established!"
+
 echo "📡 Pulling latest updates for the EPD project..."
 cd "$PROJECT_DIR" || { echo "❌ Failed to navigate to project directory."; exit 1; }
 
@@ -28,6 +38,5 @@ if [ ! -d "$PROJECT_DIR/config" ]; then
     echo "⚠ Config directory missing. Creating it..."
     mkdir -p "$PROJECT_DIR/config"
 fi
-
 
 echo "✅ Update complete!"

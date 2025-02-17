@@ -9,7 +9,7 @@ from image_source import get_random_image
 # Import appropriate ePaper display driver dynamically
 if CONFIG["USE_SIMULATOR"]:
     from epd_emulator import epdemulator
-    USE_TKINTER = CONFIG["USE_TKINTER"]  # Ensures Tkinter is read properly
+    USE_TKINTER = CONFIG["USE_TKINTER"]  
 
     print(f"📡 Using EPD Emulator ({'Tkinter' if USE_TKINTER else 'Flask'} Mode)")
     epd = epdemulator.EPD(
@@ -42,14 +42,19 @@ palette_image.putpalette((
     0, 0, 0, 255, 255, 255, 0, 255, 0, 0, 0, 255, 255, 0, 0, 255, 255, 0, 255, 128, 0
 ) + (0, 0, 0) * 249)
 
+def check_ssh_sessions():
+    """Check if any active SSH sessions exist."""
+    ssh_check = subprocess.run(["who"], capture_output=True, text=True)
+    return "pts/" in ssh_check.stdout  # Active SSH sessions show up as pts/ sessions
+
 def preprocess_image(image_data):
     """Process image for display, resizing, rotating, and quantizing."""
     print("🔄 Preprocessing Image...")
     try:
-        if isinstance(image_data, str):  # If it's a file path, open it
+        if isinstance(image_data, str):  
             print(f"📂 Opening Local Image: {image_data}")
             img = Image.open(image_data)
-        elif isinstance(image_data, io.BytesIO):  # If streamed from Google Drive
+        elif isinstance(image_data, io.BytesIO):  
             print("📡 Opening Image from Google Drive")
             img = Image.open(image_data)
         else:
@@ -113,10 +118,14 @@ def main():
         buffer = epd.getbuffer(img)
         epd.display(buffer)
 
-    # Shutdown logic
+    # Shutdown logic with SSH failsafe
     if CONFIG["SHUTDOWN_AFTER_RUN"]:
-        print("⏳ Scheduling Shutdown in 5 Minutes. To cancel, run: sudo shutdown -c")
-        subprocess.call(["sudo", "shutdown", "-h", "+2"])
+        if check_ssh_sessions():
+            print("🚨 Active SSH session detected! Preventing shutdown.")
+            print("🔄 System will remain ON for maintenance.")
+        else:
+            print("⏳ Scheduling Shutdown in 5 Minutes. To cancel, run: sudo shutdown -c")
+            subprocess.call(["sudo", "shutdown", "-h", "+5"])
     else:
         print("🟢 SHUTDOWN_AFTER_RUN is disabled. Display will remain on.")
 
