@@ -70,11 +70,13 @@ def get_config():
         "DISPLAY_MODEL": display_model,
         "TARGET_SIZE": EPD_SCREENS[display_model],
         "USE_SIMULATOR": use_simulator,
-        "USE_TKINTER": use_tkinter,  # Ensure Tkinter is read
-        "SHUTDOWN_AFTER_RUN": shutdown_after_run,  # Ensure Shutdown mode is read
+        "USE_TKINTER": use_tkinter,
+        "SHUTDOWN_AFTER_RUN": shutdown_after_run,
         "LOCAL_IMAGE_DIR": os.getenv("LOCAL_IMAGE_DIR", "/mnt/photos"),
         "DRIVE_FOLDER_ID": os.getenv("GOOGLE_DRIVE_FOLDER_ID"),
         "SERVICE_ACCOUNT_FILE": os.getenv("GOOGLE_SERVICE_ACCOUNT"),
+        "DRIVE_LOGS_FOLDER_ID": os.getenv("GOOGLE_DRIVE_LOG_FOLDER_ID"),
     }
 
 CONFIG = get_config()
+
