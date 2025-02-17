@@ -7,7 +7,8 @@ import time
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from google.oauth2 import service_account
-from config import CONFIG
+import config  # ✅ Import without triggering argument parsing
+CONFIG = config.get_config()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -84,7 +85,7 @@ if __name__ == "__main__":
         logging.error("❌ No file specified for upload.")
         sys.exit(1)
 
-    local_log_path = sys.argv[1]
+    local_log_path = sys.argv[1]  # ✅ This now works properly
 
     if not DRIVE_LOGS_FOLDER_ID:
         logging.error("❌ GOOGLE_DRIVE_LOG_FOLDER_ID is not set in config.py.")
