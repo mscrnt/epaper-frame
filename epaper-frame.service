@@ -1,13 +1,13 @@
 [Unit]
-Description=Initialize Real ePaper Display
+Description=Persistent SPI Communication Daemon for ePaper Display
 After=network.target
 
 [Service]
-Type=oneshot
+Type=simple
 User=kenneth
 WorkingDirectory=/home/kenneth/epaper-frame
-ExecStart=/usr/bin/python /home/kenneth/epaper-frame/init_display.py
-RemainAfterExit=true
+ExecStart=/usr/bin/python /home/kenneth/epaper-frame/epaper_daemon.py
+Restart=always
 
 [Install]
 WantedBy=multi-user.target
