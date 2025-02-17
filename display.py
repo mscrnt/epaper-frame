@@ -27,7 +27,13 @@ else:
 # Initialize ePaper display
 print("✅ Initializing EPD Display...")
 epd.init()
-epd.Clear(255)  # Provide required color argument
+
+# Correct the `Clear()` call based on simulator or real hardware
+if CONFIG["USE_SIMULATOR"]:
+    epd.Clear(255)  # Simulator requires a color argument
+else:
+    epd.Clear()  # Real Waveshare displays take no arguments
+
 print("✅ EPD Display Cleared")
 
 # Define 7-color palette
@@ -104,7 +110,7 @@ def main():
         print("✅ Emulator Updated.")
     else:
         print("📡 Displaying Image on Real EPD Display...")
-        buffer = img
+        buffer = epd.getbuffer(img)
         epd.display(buffer)
 
     # Shutdown logic
