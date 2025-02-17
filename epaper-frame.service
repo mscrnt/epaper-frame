@@ -1,14 +1,13 @@
 [Unit]
-Description=ePaper Frame Display Service
+Description=Initialize Real ePaper Display
 After=network.target
 
 [Service]
-Type=simple
+Type=oneshot
 User=pi
 WorkingDirectory=/home/kenneth/epaper-frame
-ExecStart=/usr/bin/python3 /home/kenneth/epaper-frame/display.py
-Restart=on-failure
-RestartSec=10
+ExecStart=/usr/bin/python3 /home/kenneth/epaper-frame/init_display.py
+RemainAfterExit=true
 
 [Install]
 WantedBy=multi-user.target
