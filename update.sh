@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Define the repo URL and project directory
+# Explicitly set the correct project directory
+PROJECT_DIR="/home/kenneth/epaper-frame"  # Change this to match your setup
 REPO_URL="https://github.com/mscrnt/epepar-frame.git"
-PROJECT_DIR="$(dirname "$(realpath "$0")")"
 
 echo "🌐 Waiting for internet connection..."
 
