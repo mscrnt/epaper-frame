@@ -1,0 +1,14 @@
+[Unit]
+Description=ePaper Frame Display Service
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/kenneth/epaper-frame
+ExecStart=/usr/bin/python3 /home/kenneth/epaper-frame/display.py
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
