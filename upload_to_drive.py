@@ -7,7 +7,8 @@ import time
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from google.oauth2 import service_account
-from config import CONFIG  # ✅ Load config
+import config  
+CONFIG = config.get_config()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
