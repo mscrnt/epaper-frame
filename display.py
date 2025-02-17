@@ -116,7 +116,7 @@ def main():
     # Shutdown logic
     if CONFIG["SHUTDOWN_AFTER_RUN"]:
         print("⏳ Scheduling Shutdown in 5 Minutes. To cancel, run: sudo shutdown -c")
-        subprocess.call(["sudo", "shutdown", "-h", "+5"])
+        subprocess.call(["sudo", "shutdown", "-h", "+2"])
     else:
         print("🟢 SHUTDOWN_AFTER_RUN is disabled. Display will remain on.")
 
