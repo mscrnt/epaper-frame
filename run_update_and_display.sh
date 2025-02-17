@@ -21,9 +21,6 @@ echo "🔄 Updating project..." | tee -a "$LOG_FILE"
 # Make sure update_wake_time.sh is executable
 chmod +x /home/kenneth/epaper-frame/update_wake_time.sh >> "$LOG_FILE" 2>&1
 
-# Make sure update_to_drive.sh is executable
-chmod +x /home/kenneth/epaper-frame/update_to_drive.sh >> "$LOG_FILE" 2>&1
-
 # Run display script
 echo "📺 Starting display.py..." | tee -a "$LOG_FILE"
 python display.py >> "$LOG_FILE" 2>&1
