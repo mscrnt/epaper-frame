@@ -8,11 +8,14 @@ cd "$PROJECT_DIR" || { echo "❌ Failed to navigate to project directory."; exit
 
 # Update the PiSugar auto wake time
 echo "⏳ Setting next wake time..."
-./update_wake_time.sh
+/home/kenneth/epaper-frame/update_wake_time.sh
 
 # Run update script
 echo "🔄 Updating project..."
-./update.sh
+/home/kenneth/epaper-frame/update.sh
+
+# Make sure update_wake_time.sh is executable
+chmod +x /home/kenneth/epaper-frame/update_wake_time.sh
 
 # Run display script
 echo "📺 Starting display.py..."
