@@ -136,7 +136,7 @@ class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     allow_reuse_address = True
 
 if __name__ == "__main__":
-    HOST, PORT = "127.0.0.1", 9999
+    HOST, PORT = "0.0.0.0", 9999  # Listen on all interfaces
     server = ThreadedTCPServer((HOST, PORT), EpaperDaemonHandler)
     print(f"Persistent ePaper daemon running on {HOST}:{PORT}. Waiting for commands...")
     try:
@@ -144,3 +144,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("Daemon interrupted, shutting down.")
         server.shutdown()
+
