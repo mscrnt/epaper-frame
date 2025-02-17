@@ -7,29 +7,25 @@ import time
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from google.oauth2 import service_account
-import config  # ✅ Import without triggering argument parsing
-CONFIG = config.get_config()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
-# Google Drive Folder ID for logs (now read from .secrets via config.py)
-DRIVE_LOGS_FOLDER_ID = CONFIG.get("GOOGLE_DRIVE_LOG_FOLDER_ID")
 LOG_FILE_NAME = "epaper_logs.txt"  # Main log file
 MAX_LOG_SIZE = 10 * 1024 * 1024  # 10MB
 
-def authenticate_drive():
+def authenticate_drive(service_account_file):
     """Authenticate Google Drive API."""
     try:
-        creds = service_account.Credentials.from_service_account_file(CONFIG["SERVICE_ACCOUNT_FILE"])
+        creds = service_account.Credentials.from_service_account_file(service_account_file)
         return build("drive", "v3", credentials=creds, cache_discovery=False)
     except Exception as e:
         logging.error(f"❌ Google Drive authentication failed: {e}")
         sys.exit(1)
 
-def find_existing_log(drive_service):
+def find_existing_log(drive_service, folder_id):
     """Search for an existing log file in Google Drive."""
-    query = f"name='{LOG_FILE_NAME}' and '{DRIVE_LOGS_FOLDER_ID}' in parents and trashed=false"
+    query = f"name='{LOG_FILE_NAME}' and '{folder_id}' in parents and trashed=false"
     results = drive_service.files().list(q=query, fields="files(id, name, size)").execute()
     files = results.get("files", [])
     return files[0] if files else None  # Return file info if found
@@ -85,14 +81,21 @@ if __name__ == "__main__":
         logging.error("❌ No file specified for upload.")
         sys.exit(1)
 
-    local_log_path = sys.argv[1]  # ✅ This now works properly
+    local_log_path = sys.argv[1]
+
+    # ✅ Lazy-load CONFIG here, so `config.py` doesn't interfere with argparse
+    import config
+    CONFIG = config.get_config()
+
+    DRIVE_LOGS_FOLDER_ID = CONFIG.get("GOOGLE_DRIVE_LOG_FOLDER_ID")
+    SERVICE_ACCOUNT_FILE = CONFIG.get("SERVICE_ACCOUNT_FILE")
 
     if not DRIVE_LOGS_FOLDER_ID:
         logging.error("❌ GOOGLE_DRIVE_LOG_FOLDER_ID is not set in config.py.")
         sys.exit(1)
 
-    drive_service = authenticate_drive()
-    existing_log = find_existing_log(drive_service)
+    drive_service = authenticate_drive(SERVICE_ACCOUNT_FILE)
+    existing_log = find_existing_log(drive_service, DRIVE_LOGS_FOLDER_ID)
 
     # Handle log rotation if necessary
     log_file_to_upload = manage_log_file(local_log_path)
