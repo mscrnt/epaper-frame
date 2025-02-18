@@ -81,14 +81,22 @@ MQTT_TOPIC_PREFIX=epaper_frame
 
 ---
 
+### **3️⃣ Configure `.secrets` File**
+Create a `.secrets` file in the project root:
+```
+GOOGLE_DRIVE_FOLDER_ID=your_drive_folder_id (if using Google Drive)
+GOOGLE_DRIVE_LOG_FOLDER_ID=your_log_folder_id (if using Google Drive)
+MQTT_USERNAME=your_mqtt_username (if using MQTT)
+MQTT_PASSWORD=your_mqtt_password (if using MQTT)
+```
+
+---
 ### **4️⃣ Configure Google Drive (Optional)**
 If using Google Drive:
 1. **Enable Google Drive API**: [Google Cloud Console](https://console.cloud.google.com/).
 2. **Download `credentials.json`** and place it in the project root.
-3. Add your **Google Drive Folder ID** to `.secrets`:
-   ```
-   GOOGLE_DRIVE_FOLDER_ID=your_drive_folder_id
-   ```
+3. **Share the folder** with the service account email found in `credentials.json`.
+4. **Set the folder ID** in `.secrets` file.
 
 ---
 
@@ -124,7 +132,7 @@ This will:
 ### **📤 Sends These MQTT Updates**
 | **Topic**                 | **Payload Example**                            | **Description** |
 |---------------------------|--------------------------------|----------------|
-| `epaper_frame/last_image` | `{"image": "Maureen & Kenneth-52.jpg"}` | Last displayed image |
+| `epaper_frame/last_image` | `{"image": "Last_image_displayed.jpg"}` | Last displayed image |
 | `epaper_frame/battery_status` | `{"charge": "77.52%", "voltage": "3.80V", "current": "-1.05A", "charging": "false", "power_plugged": "true"}` | Battery status |
 
 ### **📥 Accepts These MQTT Commands**
