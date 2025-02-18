@@ -1,7 +1,7 @@
-### **📄 README.md - ePaper Frame for Raspberry Pi**
-This project is designed to **display images on an ePaper display** using a **Raspberry Pi**. It supports **Google Drive image retrieval**, a **Tkinter-based simulator**, and an **automatic shutdown feature** for power efficiency.  
+## **📄 README.md - ePaper Frame for Raspberry Pi**
+This project enables a **Raspberry Pi** to display images on an **ePaper display**. It supports **Google Drive image retrieval**, a **simulated ePaper display**, and **power management** using a **PiSugar battery**.
 
-The system can be set up to **wake on an event**, display an image, and **shut down** after execution. Users can prevent shutdown by **updating the repo** or manually canceling shutdown.
+The system can **wake on a schedule**, display an image, and **shut down** after execution. Users can also **control it via MQTT commands** from Home Assistant.
 
 ---
 
@@ -9,8 +9,9 @@ The system can be set up to **wake on an event**, display an image, and **shut d
 ✔ **Supports Waveshare ePaper displays**  
 ✔ **Simulated ePaper display (EPD Emulator)**  
 ✔ **Retrieves images from local storage or Google Drive**  
-✔ **Tkinter UI mode for GUI simulation**  
-✔ **Automatic shutdown after displaying the image** *(optional)*  
+✔ **Automated wake-up using PiSugar battery**  
+✔ **Reports battery status via MQTT**  
+✔ **Accepts MQTT commands for display updates**  
 ✔ **Over-the-Air (OTA) updates via Git**  
 
 ---
@@ -19,23 +20,21 @@ The system can be set up to **wake on an event**, display an image, and **shut d
 ```
 epepar-frame/
 │── epd_emulator/              # EPD Emulator for Tkinter or Flask
-│   ├── epdemulator.py         # Handles EPD simulation with Tkinter & Flask
 │── waveshare_epd/             # Drivers for real Waveshare ePaper displays
-│── images/                    # Local folder for images (if using local storage)
+│── images/                    # Local folder for images
 │── config.py                  # Loads settings from .env & CLI arguments
-│── display.py                 # Main script that processes & displays images
-│── image_source.py            # Handles fetching images from local or Google Drive
+│── display.py                 # Main script for processing & displaying images
+│── image_source.py            # Fetches images from local or Google Drive
 │── update.sh                  # Fetches latest updates from GitHub
-│── run_update_and_display.sh  # Updates project & runs display.py
+│── update_wake_time.sh        # Updates PiSugar wake time
+│── run_update_and_display.sh  # Runs updates & display.py
+│── mqtt_update.py             # Sends battery status & last image to MQTT
+│── mqtt_command_listener.py   # Listens for MQTT commands (shutdown, update display)
+│── upload_to_drive.py         # Uploads logs to Google Drive
 │── .env                       # Environment variables for configuration
 │── .secrets                   # Secure storage for sensitive values (Google Drive)
 │── README.md                  # This documentation
 ```
-
----
-
-## **📜 Credits**
-This project **uses and extends the EPD Emulator** from [EPD-Emulator](https://github.com/infinition/EPD-Emulator) by [infinition](https://github.com/infinition). The emulator allows for **Tkinter- and Flask-based simulation of ePaper displays**, making it an excellent tool for development without physical hardware.
 
 ---
 
@@ -50,10 +49,9 @@ cd epepar-frame
 ---
 
 ### **2️⃣ Install Dependencies**
-Install required packages:
 ```bash
 sudo apt update
-sudo apt install -y python3 python3-venv python3-pip git
+sudo apt install -y python3 python3-venv python3-pip git jq
 ```
 Create a **Python virtual environment**:
 ```bash
@@ -74,20 +72,40 @@ DISPLAY=epd5in65f  # Default display
 USE_SIMULATOR=true  # Set to "true" to use the emulator
 USE_TKINTER=false   # Set to "true" for GUI mode
 SHUTDOWN_AFTER_RUN=true  # Set to "true" to shutdown after displaying the image
+MQTT_BROKER=homeassistant.local
+MQTT_PORT=1883
+MQTT_USERNAME=mqtt_user
+MQTT_PASSWORD=mqtt_password
+MQTT_TOPIC_PREFIX=epaper_frame
 ```
 
-> **🛠 Need to prevent shutdown?** Update `.env` with `SHUTDOWN_AFTER_RUN=false` and reboot the Pi.
+> **🛠 Need to prevent shutdown?** Set `SHUTDOWN_AFTER_RUN=false` in `.env`.
 
 ---
 
-### **4️⃣ Set Up Google Drive (Optional)**
+### **4️⃣ Configure Google Drive (Optional)**
 If using Google Drive:
-1. **Enable Google Drive API**: [Google Cloud Console](https://console.cloud.google.com/)
+1. **Enable Google Drive API**: [Google Cloud Console](https://console.cloud.google.com/).
 2. **Download `credentials.json`** and place it in the project root.
 3. Add your **Google Drive Folder ID** to `.secrets`:
    ```
    GOOGLE_DRIVE_FOLDER_ID=your_drive_folder_id
    ```
+
+---
+
+## **🔋 PiSugar Battery Setup**
+This setup **requires PiSugar** with the **PiSugar server running**.
+
+To check if the PiSugar server is running:
+```bash
+sudo systemctl status pisugar-server
+```
+
+Set the PiSugar **wake-up time** every **8 hours**:
+```bash
+/home/kenneth/epaper-frame/update_wake_time.sh
+```
 
 ---
 
@@ -102,124 +120,69 @@ This will:
 - Display the image
 - Shutdown the Pi if `SHUTDOWN_AFTER_RUN=true`
 
-### **📌 Prevent Shutdown**
-To prevent automatic shutdown:
-```bash
-sudo shutdown -c
-```
-Or update `.env`:
-```bash
-nano .env
-# Change the SHUTDOWN_AFTER_RUN variable
-SHUTDOWN_AFTER_RUN=false
-```
-
 ---
 
-## **🔄 Automating Updates & Execution**
-### **📌 `update.sh` (Fetch latest updates from GitHub)**
-This script updates the project.  
-Users should **modify it to point to their own GitHub repo**.
+## **📡 MQTT Integration**
+### **📤 Sends These MQTT Updates**
+| **Topic**                 | **Payload Example**                            | **Description** |
+|---------------------------|--------------------------------|----------------|
+| `epaper_frame/last_image` | `{"image": "Maureen & Kenneth-52.jpg"}` | Last displayed image |
+| `epaper_frame/battery_status` | `{"charge": "77.52%", "voltage": "3.80V", "current": "-1.05A", "charging": "false", "power_plugged": "true"}` | Battery status |
 
+### **📥 Accepts These MQTT Commands**
+| **Topic**                   | **Payload**           | **Action** |
+|-----------------------------|----------------------|------------|
+| `epaper_frame/command`       | `shutdown`          | Shuts down the Pi |
+| `epaper_frame/command`       | `display`           | Runs `display.py` |
+| `epaper_frame/command`       | `set_image: my_image.jpg` | Displays a specific image |
+
+---
+### **📌 Automate MQTT Services**
+To run **MQTT updates & command listener** automatically:
+
+
+---
+#### **Create `mqtt_command_listener.service`**
 ```bash
-#!/bin/bash
-
-# Define the repo URL and project directory
-REPO_URL="https://github.com/YOUR-USERNAME/epepar-frame.git"
-PROJECT_DIR="$(dirname "$(realpath "$0")")"
-
-echo "📡 Pulling latest updates for the EPD project..."
-cd "$PROJECT_DIR" || { echo "❌ Failed to navigate to project directory."; exit 1; }
-
-# Ensure Git is installed
-if ! command -v git &> /dev/null; then
-    echo "❌ Git is not installed. Please install Git first."
-    exit 1
-fi
-
-# Check if the project is already a git repo
-if [ ! -d .git ]; then
-    echo "🚀 Cloning repository..."
-    git clone "$REPO_URL" "$PROJECT_DIR"
-else
-    echo "🔄 Pulling latest changes..."
-    git reset --hard origin/main  # Ensure a clean update
-    git pull origin main
-fi
-
-# Make sure the config directory exists
-if [ ! -d "$PROJECT_DIR/config" ]; then
-    echo "⚠ Config directory missing. Creating it..."
-    mkdir -p "$PROJECT_DIR/config"
-fi
-
-echo "✅ Update complete!"
+sudo nano /etc/systemd/system/mqtt_command_listener.service
 ```
-Run manually:
+```
+[Unit]
+Description=E-Paper MQTT Command Listener
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /home/kenneth/epaper-frame/mqtt_command_listener.py
+Restart=always
+User=kenneth
+
+[Install]
+WantedBy=multi-user.target
+```
+Enable & start:
 ```bash
-./update.sh
+sudo systemctl enable mqtt_command_listener.service
+sudo systemctl start mqtt_command_listener.service
 ```
 
 ---
 
 ### **📌 `run_update_and_display.sh` (Update and run display.py)**
-```bash
-#!/bin/bash
+This script runs the update, **fetches new images**, and **updates the display**.
 
-# Define the project directory (auto-detects the script location)
-PROJECT_DIR="$(dirname "$(realpath "$0")")"
-
-echo "🚀 Running ePaper update and display script..."
-cd "$PROJECT_DIR" || { echo "❌ Failed to navigate to project directory."; exit 1; }
-
-# Run update script
-echo "🔄 Updating project..."
-./update.sh
-
-# Run display script
-echo "📺 Starting display.py..."
-python display.py
-
-echo "✅ Done!"
-```
-Run manually:
 ```bash
 ./run_update_and_display.sh
 ```
 
 ---
-
-### **🔁 Automating with `cron`**
-To set the Raspberry Pi to **wake on event**, display an image, and **shut down**, schedule the script via `cron`:
+## **🔄 Automating Execution**
+### **📌 Wake on Event & Update via `cron`**
+To set the Raspberry Pi to **wake on schedule**, update, and **display an image**, add to `cron`:
 
 ```bash
 crontab -e
 ```
-Add this line:
+Add:
 ```
-@reboot /bin/bash /path/to/epepar-frame/run_update_and_display.sh
+@reboot /bin/bash /home/kenneth/epaper-frame/run_update_and_display.sh
 ```
-> **Note:** Replace `/path/to/epepar-frame/` with your actual project path.
-
-This will:
-1. **Update the repository** on boot.
-2. **Fetch new images**.
-3. **Display an image**.
-4. **Shutdown (if `SHUTDOWN_AFTER_RUN=true`)**.
-
----
-
-## **🔧 Configuration Options**
-| **Variable**         | **Description**                                      | **Default** |
-|----------------------|------------------------------------------------------|------------|
-| `IMAGE_SOURCE`       | `local` (local storage) or `drive` (Google Drive)    | `local`    |
-| `GOOGLE_SERVICE_ACCOUNT` | JSON file for Google Drive authentication       | `credentials.json` |
-| `LOCAL_IMAGE_DIR`    | Folder for locally stored images                     | `./images` |
-| `DISPLAY`           | Selects the ePaper display model                      | `epd5in65f` |
-| `USE_SIMULATOR`      | `true` (use emulator) or `false` (use real display)  | `true`     |
-| `USE_TKINTER`        | `true` (Tkinter UI mode) or `false` (Flask)          | `false`    |
-| `SHUTDOWN_AFTER_RUN` | `true` (auto shutdown) or `false` (stay on)         | `true`     |
-
----
-
-🚀 **Enjoy your ePaper display!** Special thanks to **[EPD-Emulator](https://github.com/infinition/EPD-Emulator)** for the emulator code. 🔥
