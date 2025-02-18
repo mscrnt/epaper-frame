@@ -22,8 +22,36 @@ MQTT_PASSWORD = os.getenv("MQTT_PASSWORD", None)
 MQTT_TOPIC_PREFIX = os.getenv("MQTT_TOPIC_PREFIX", "epaper_frame")
 LOG_FILE = os.getenv("LOG_FILE", "/mnt/photos/epaper_logs.txt")
 
+# ✅ Human-readable mapping for PiSugar keys
+SENSOR_LABELS = {
+    "firmware_version": "Firmware Version",
+    "battery": "Battery Level (%)",
+    "battery_i": "Battery Current (A)",
+    "battery_v": "Battery Voltage (V)",
+    "battery_charging": "Battery Charging",
+    "battery_input_protect": "Battery Input Protect",
+    "model": "PiSugar Model",
+    "battery_led_amount": "Battery LED Count",
+    "battery_power_plugged": "Battery USB Plugged",
+    "battery_charging_range": "Battery Charging Range (%)",
+    "battery_allow_charging": "Battery Allow Charging",
+    "battery_output_enabled": "Battery Output Enabled",
+    "rtc_time": "RTC Clock Time",
+    "rtc_alarm_enabled": "RTC Alarm Enabled",
+    "rtc_alarm_time": "RTC Alarm Time",
+    "alarm_repeat": "RTC Alarm Repeat (Weekdays)",
+    "button_enable": "Custom Button Enable",
+    "safe_shutdown_level": "Safe Shutdown Level (%)",
+    "safe_shutdown_delay": "Safe Shutdown Delay (s)",
+    "auth_username": "HTTP Auth Username",
+    "anti_mistouch": "Anti-Mistouch Protection",
+    "soft_poweroff": "Software Poweroff Enabled",
+    "temperature": "Device Temperature (°C)",
+    "input_protect": "Battery Hardware Protect",
+}
+
 def run_command(command):
-    """Helper function to execute shell commands."""
+    """Helper function to execute shell commands and get output."""
     try:
         result = subprocess.run(command, capture_output=True, text=True, shell=True)
         return result.stdout.strip() if result.stdout else None
@@ -31,57 +59,24 @@ def run_command(command):
         logging.error(f"❌ Failed to run command {command}: {e}")
         return None
 
-def get_last_displayed_image():
-    """Extract the last image displayed from the log file, preserving spaces."""
-    if not os.path.exists(LOG_FILE):
-        logging.error(f"❌ Log file not found: {LOG_FILE}")
+def parse_pisugar_response(response):
+    """Extracts only the value from the PiSugar response."""
+    if not response or "Invalid request" in response:
         return "Unknown"
-
-    last_image = "Unknown"
-    try:
-        with open(LOG_FILE, "r") as log_file:
-            for line in log_file:
-                if "🖼️ Last Image Displayed:" in line:
-                    last_image = line.split("🖼️ Last Image Displayed: ")[1].strip().strip('"')
-
-    except Exception as e:
-        logging.error(f"❌ Error reading log file: {e}")
-
-    return last_image
+    
+    parts = response.split(": ", 1)  # Split only at the first occurrence
+    if len(parts) == 2:
+        return parts[1].strip()
+    return response.strip()
 
 def get_pisugar_status():
-    """Retrieve all PiSugar-related metrics."""
-    commands = {
-        "firmware_version": "get firmware_version",
-        "battery": "get battery",
-        "battery_i": "get battery_i",
-        "battery_v": "get battery_v",
-        "battery_charging": "get battery_charging",
-        "battery_input_protect": "get battery_input_protect_enabled",
-        "model": "get model",
-        "battery_led_amount": "get battery_led_amount",
-        "battery_power_plugged": "get battery_power_plugged",
-        "battery_charging_range": "get battery_charging_range",
-        "battery_allow_charging": "get battery_allow_charging",
-        "battery_output_enabled": "get battery_output_enabled",
-        "rtc_time": "get rtc_time",
-        "rtc_alarm_enabled": "get rtc_alarm_enabled",
-        "rtc_alarm_time": "get rtc_alarm_time",
-        "alarm_repeat": "get alarm_repeat",
-        "button_enable": "get button_enable",
-        "safe_shutdown_level": "get safe_shutdown_level",
-        "safe_shutdown_delay": "get safe_shutdown_delay",
-        "auth_username": "get auth_username",
-        "anti_mistouch": "get anti_mistouch",
-        "soft_poweroff": "get soft_poweroff",
-        "temperature": "get temperature",
-        "input_protect": "get input_protect",
-    }
+    """Retrieve all PiSugar-related metrics and properly format responses."""
+    commands = {key: f"get {key}" for key in SENSOR_LABELS.keys()}
 
     status = {}
     for key, command in commands.items():
         response = run_command(f"echo '{command}' | nc -q 0 127.0.0.1 8423")
-        status[key] = response if response else "Unknown"
+        status[key] = parse_pisugar_response(response)
 
     return status
 
@@ -98,19 +93,22 @@ def publish_mqtt(topic, payload, retain=True):
         full_topic = f"{MQTT_TOPIC_PREFIX}/{topic}"
         discovery_topic = f"homeassistant/sensor/{MQTT_TOPIC_PREFIX}_{topic}/config"
 
-        # ✅ Determine sensor type (binary_sensor or regular sensor)
-        sensor_type = "sensor"  # Default to sensor
-        if "charging" in topic or "plugged" in topic or "poweroff" in topic:
+        # ✅ Determine sensor type (binary_sensor or sensor)
+        sensor_type = "sensor"
+        if payload in ["true", "false"]:  # Convert true/false to binary_sensor
             sensor_type = "binary_sensor"
+
+        # ✅ Use human-readable names for Home Assistant
+        sensor_name = SENSOR_LABELS.get(topic, topic.replace("_", " ").title())
 
         # ✅ Publish Discovery message
         discovery_payload = {
-            "name": f"{MQTT_TOPIC_PREFIX} {topic.replace('_', ' ').title()}",
+            "name": f"{sensor_name}",
             "state_topic": full_topic,
             "unique_id": f"{MQTT_TOPIC_PREFIX}_{topic}",
             "device": {
                 "identifiers": [MQTT_TOPIC_PREFIX],
-                "name": MQTT_TOPIC_PREFIX,
+                "name": "PiSugar ePaper Frame",
                 "model": "Raspberry Pi ePaper Frame",
                 "manufacturer": "Mscrnt LLC",
             },
@@ -121,12 +119,29 @@ def publish_mqtt(topic, payload, retain=True):
             discovery_payload["payload_off"] = "false"
 
         client.publish(discovery_topic, json.dumps(discovery_payload), retain=True)
-        client.publish(full_topic, payload, retain=retain)
+        client.publish(full_topic, json.dumps(payload), retain=retain)
 
         logging.info(f"✅ Sent MQTT update to {full_topic}: {payload}")
         client.disconnect()
     except Exception as e:
         logging.error(f"❌ Failed to send MQTT message: {e}")
+
+def get_last_displayed_image():
+    """Extract the last image displayed from the log file, preserving spaces."""
+    if not os.path.exists(LOG_FILE):
+        logging.error(f"❌ Log file not found: {LOG_FILE}")
+        return "Unknown"
+
+    last_image = "Unknown"
+    try:
+        with open(LOG_FILE, "r") as log_file:
+            for line in log_file:
+                if "🖼️ Last Image Displayed:" in line:
+                    last_image = line.split("🖼️ Last Image Displayed: ")[1].strip()
+    except Exception as e:
+        logging.error(f"❌ Error reading log file: {e}")
+
+    return last_image
 
 if __name__ == "__main__":
     # ✅ Retrieve values automatically
@@ -138,4 +153,4 @@ if __name__ == "__main__":
 
     # ✅ Send each PiSugar metric separately
     for key, value in pisugar_status.items():
-        publish_mqtt(f"pisugar_{key}", value)
+        publish_mqtt(key, value)
