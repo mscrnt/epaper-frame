@@ -5,6 +5,7 @@ import subprocess
 from PIL import Image, ImageOps
 from config import CONFIG
 from image_source import get_random_image
+import os
 
 # Import appropriate ePaper display driver dynamically
 if CONFIG["USE_SIMULATOR"]:
@@ -92,6 +93,27 @@ def preprocess_image(image_data):
     print(f"✅ Image Processed. Final Size: {img.size}")
     return img
 
+LOG_FILE = "/mnt/photos/epaper_logs.txt"
+
+def log_displayed_image(image_path):
+    """Overwrite the last displayed image entry in the log file."""
+    log_lines = []
+
+    # Read existing log file, excluding previous "Last Image Displayed" entries
+    if os.path.exists(LOG_FILE):
+        with open(LOG_FILE, "r") as log_file:
+            log_lines = [line for line in log_file if "🖼️ Last Image Displayed:" not in line]
+
+    # Append new last image entry
+    log_lines.append(f"🖼️ Last Image Displayed: {image_path}\n")
+
+    # Overwrite log file with the updated list
+    with open(LOG_FILE, "w") as log_file:
+        log_file.writelines(log_lines)
+
+    print(f"🖼️ Last Image Updated: {image_path}")
+
+
 def main():
     """Main function to handle image selection, processing, and display."""
     print(f"📺 Using Display: {CONFIG['DISPLAY_MODEL']}, Resolution: {CONFIG['TARGET_SIZE']}, Simulator: {CONFIG['USE_SIMULATOR']}")
@@ -100,6 +122,10 @@ def main():
     if image_data is None:
         print("❌ No image to display. Exiting.")
         return
+    
+    # Log the displayed image
+    if isinstance(image_data, str):
+        log_displayed_image(image_data)
 
     img = preprocess_image(image_data)
     if img is None:
