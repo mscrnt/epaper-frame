@@ -1,0 +1,11 @@
+[Unit]
+Description=E-Paper MQTT Command Listener
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /home/kenneth/epaper-frame/mqtt_command_listener.py
+Restart=always
+User=kenneth
+
+[Install]
+WantedBy=multi-user.target
