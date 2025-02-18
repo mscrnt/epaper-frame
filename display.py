@@ -95,8 +95,9 @@ def preprocess_image(image_data):
 
 LOG_FILE = "/mnt/photos/epaper_logs.txt"
 
+
 def log_displayed_image(image_path):
-    """Overwrite the last displayed image entry in the log file."""
+    """Overwrite the last displayed image entry in the log file, preserving spaces."""
     log_lines = []
 
     # Read existing log file, excluding previous "Last Image Displayed" entries
@@ -104,8 +105,8 @@ def log_displayed_image(image_path):
         with open(LOG_FILE, "r") as log_file:
             log_lines = [line for line in log_file if "🖼️ Last Image Displayed:" not in line]
 
-    # Append new last image entry
-    log_lines.append(f"🖼️ Last Image Displayed: {image_path}\n")
+    # Append new last image entry with full filename
+    log_lines.append(f"🖼️ Last Image Displayed: \"{image_path}\"\n")  # ✅ Preserve spaces
 
     # Overwrite log file with the updated list
     with open(LOG_FILE, "w") as log_file:

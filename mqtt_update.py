@@ -32,20 +32,23 @@ def run_command(command):
         return None
 
 def get_last_displayed_image():
-    """Extract the last image displayed from the log file."""
+    """Extract the last image displayed from the log file, preserving spaces."""
     if not os.path.exists(LOG_FILE):
         logging.error(f"❌ Log file not found: {LOG_FILE}")
         return "Unknown"
 
+    last_image = "Unknown"
     try:
         with open(LOG_FILE, "r") as log_file:
-            for line in reversed(log_file.readlines()):
+            for line in log_file:
                 if "🖼️ Last Image Displayed:" in line:
-                    return line.split("🖼️ Last Image Displayed: ")[1].strip()
+                    last_image = line.split("🖼️ Last Image Displayed: ")[1].strip().strip('"')  # ✅ Preserve full filename
+
     except Exception as e:
         logging.error(f"❌ Error reading log file: {e}")
 
-    return "Unknown"
+    return last_image
+
 
 def clean_response(response, prefix):
     """Remove response prefix (e.g., 'battery: 77.51571' → '77.52%')"""
