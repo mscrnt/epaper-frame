@@ -27,6 +27,11 @@ python display.py >> "$LOG_FILE" 2>&1
 
 echo "✅ Done!" | tee -a "$LOG_FILE"
 
+# Log battery status before uploading
+echo "🔋 Checking Battery Status..." | tee -a "$LOG_FILE"
+BATTERY_STATUS=$(echo "get battery" | nc -q 0 127.0.0.1 8423)
+echo "$BATTERY_STATUS" | tee -a "$LOG_FILE"
+
 # Upload the log file to Google Drive (append instead of replacing)
 echo "☁️ Uploading log file to Google Drive..." | tee -a "$LOG_FILE"
 python /home/kenneth/epaper-frame/upload_to_drive.py "$LOG_FILE" >> "$LOG_FILE" 2>&1
