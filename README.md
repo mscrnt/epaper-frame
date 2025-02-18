@@ -41,10 +41,10 @@ epepar-frame/
 ## **🚀 Installation on Raspberry Pi**
 ### **1️⃣ Clone the Repository**
 ```bash
-git clone https://github.com/YOUR-USERNAME/epepar-frame.git
+git clone https://github.com/mscrnt/epepar-frame.git
 cd epepar-frame
 ```
-> **🔹 Important:** Replace `YOUR-USERNAME` with **your own GitHub repo** if you forked the project.
+> **🔹 Important:** Replace `mscrnt` with **your own GitHub repo** if you forked the project.
 
 ---
 
@@ -110,7 +110,7 @@ sudo systemctl status pisugar-server
 
 Set the PiSugar **wake-up time** every **8 hours**:
 ```bash
-/home/kenneth/epaper-frame/update_wake_time.sh
+/path/to/epaper-frame/update_wake_time.sh
 ```
 
 ---
