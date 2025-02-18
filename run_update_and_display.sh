@@ -26,22 +26,8 @@ chmod +x /home/kenneth/epaper-frame/update_wake_time.sh >> "$LOG_FILE" 2>&1
 echo "📺 Starting display.py..." | tee -a "$LOG_FILE"
 python display.py >> "$LOG_FILE" 2>&1
 
-# Capture the last image displayed
-LAST_IMAGE=$(tail -n 20 "$LOG_FILE" | grep "📂 Selected Drive image:" | awk '{print $NF}')
-echo "🖼️ Last Image Displayed: $LAST_IMAGE" | tee -a "$LOG_FILE"
-
-# Send MQTT update for last image
-if [[ ! -z "$LAST_IMAGE" ]]; then
-    python "$MQTT_SCRIPT" "last_image" "{\"image\": \"$LAST_IMAGE\"}"
-fi
-
-# Log battery status before uploading
-echo "🔋 Checking Battery Status..." | tee -a "$LOG_FILE"
-BATTERY_STATUS=$(echo "get battery" | nc -q 0 127.0.0.1 8423)
-echo "Battery Status: $BATTERY_STATUS" | tee -a "$LOG_FILE"
-
-# Send MQTT update for battery status
-python "$MQTT_SCRIPT" "battery_status" "{\"charge\": \"$BATTERY_STATUS\"}"
+# ✅ Run MQTT update script (handles last image & battery automatically)
+python "$MQTT_SCRIPT"
 
 # Upload the log file to Google Drive
 echo "☁️ Uploading log file to Google Drive..." | tee -a "$LOG_FILE"
