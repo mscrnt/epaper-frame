@@ -6,13 +6,26 @@ REPO_URL="https://github.com/mscrnt/epepar-frame.git"
 
 echo "🌐 Waiting for internet connection..."
 
-# Loop until internet is available (ping Google's public DNS)
+# Wait up to 60 seconds for an internet connection
+TIMEOUT=60
+ELAPSED=0
+
 while ! ping -c 1 -W 3 google.com &> /dev/null; do
     echo "🔄 No internet connection. Retrying in 10 seconds..."
     sleep 10
+    ((ELAPSED+=10))
+    
+    if [ "$ELAPSED" -ge "$TIMEOUT" ]; then
+        echo "❌ No internet detected after $TIMEOUT seconds. Exiting."
+        exit 1
+    fi
 done
 
 echo "✅ Internet connection established!"
+
+# ✅ Ensure Git recognizes the project directory as safe
+echo "🔒 Configuring Git safe directory..."
+git config --global --add safe.directory "$PROJECT_DIR"
 
 echo "📡 Pulling latest updates for the EPD project..."
 cd "$PROJECT_DIR" || { echo "❌ Failed to navigate to project directory."; exit 1; }

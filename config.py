@@ -76,6 +76,10 @@ def get_config():
         "DRIVE_FOLDER_ID": os.getenv("GOOGLE_DRIVE_FOLDER_ID"),
         "SERVICE_ACCOUNT_FILE": os.getenv("GOOGLE_SERVICE_ACCOUNT"),
         "DRIVE_LOGS_FOLDER_ID": os.getenv("GOOGLE_DRIVE_LOG_FOLDER_ID"),
+        "MQTT_BROKER": os.getenv("MQTT_BROKER", "homeassistant.local"),
+        "MQTT_PORT": int(os.getenv("MQTT_PORT", 1883)),
+        "MQTT_TOPIC_PREFIX": os.getenv("MQTT_TOPIC_PREFIX", "epaper_frame"),
+        "LOG_FILE": os.getenv("LOG_FILE", "/mnt/photos/epaper_logs.txt"),
     }
 
 CONFIG = get_config()
