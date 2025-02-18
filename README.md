@@ -67,8 +67,8 @@ Create a `.env` file in the project root:
 ```
 IMAGE_SOURCE=drive  # Options: local, drive
 GOOGLE_SERVICE_ACCOUNT=credentials.json
-LOCAL_IMAGE_DIR=./images
-DISPLAY=epd5in65f  # Default display
+LOCAL_IMAGE_DIR=./mnt/images  # Local image directory
+DISPLAY=epd5in65f  # Default display 5.65 inch 7 color display (600, 448)
 USE_SIMULATOR=true  # Set to "true" to use the emulator
 USE_TKINTER=false   # Set to "false" to use Flask for the simulator
 SHUTDOWN_AFTER_RUN=true  # Set to "true" to shutdown after displaying the image

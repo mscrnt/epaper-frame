@@ -72,8 +72,8 @@ def get_battery_status():
         "power_plugged": battery_power_plugged
     }
 
-def publish_mqtt(topic, payload):
-    """Send MQTT message to Home Assistant."""
+def publish_mqtt(topic, payload, retain=True):
+    """Send MQTT message to Home Assistant using discovery format."""
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)  # ✅ Use correct API version
 
     if MQTT_USERNAME and MQTT_PASSWORD:
@@ -81,12 +81,31 @@ def publish_mqtt(topic, payload):
 
     try:
         client.connect(MQTT_BROKER, MQTT_PORT, 60)
+        
         full_topic = f"{MQTT_TOPIC_PREFIX}/{topic}"
-        client.publish(full_topic, json.dumps(payload, ensure_ascii=False), retain=True)
+        discovery_topic = f"homeassistant/sensor/{MQTT_TOPIC_PREFIX}_{topic}/config"  # ✅ Home Assistant format
+        
+        # ✅ Publish Discovery message (only needed once per device)
+        discovery_payload = {
+            "name": f"{MQTT_TOPIC_PREFIX} {topic.replace('_', ' ').title()}",
+            "state_topic": full_topic,
+            "unique_id": f"{MQTT_TOPIC_PREFIX}_{topic}",
+            "device": {
+                "identifiers": [MQTT_TOPIC_PREFIX],
+                "name": MQTT_TOPIC_PREFIX,
+                "model": "Raspberry Pi ePaper Frame",
+                "manufacturer": "Mscrnt LLC",
+            }
+        }
+        
+        client.publish(discovery_topic, json.dumps(discovery_payload), retain=True)  # ✅ Auto discovery config
+        client.publish(full_topic, json.dumps(payload, ensure_ascii=False), retain=retain)  # ✅ Send actual data
+
         logging.info(f"✅ Sent MQTT update to {full_topic}: {payload}")
         client.disconnect()
     except Exception as e:
         logging.error(f"❌ Failed to send MQTT message: {e}")
+
 
 if __name__ == "__main__":
     # ✅ Retrieve values automatically
