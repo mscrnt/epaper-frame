@@ -23,6 +23,13 @@ MQTT_PASSWORD = os.getenv("MQTT_PASSWORD", None)
 MQTT_TOPIC_PREFIX = os.getenv("MQTT_TOPIC_PREFIX", "epaper_frame")
 IMAGE_DIR = os.getenv("LOCAL_IMAGE_DIR", "/mnt/photos")
 
+# ✅ Valid PiSugar Commands
+PISUGAR_COMMANDS = {
+    "button_enable", "button_shell", "battery_input_protect", "safe_shutdown_level",
+    "safe_shutdown_delay", "battery_charging_range", "allow_charging", "battery_output",
+    "auth", "anti_mistouch", "soft_poweroff", "soft_poweroff_shell", "input_protect"
+}
+
 def run_command(command):
     """Helper function to execute shell commands."""
     try:
@@ -33,7 +40,7 @@ def run_command(command):
 def send_mqtt_response(topic, message):
     """Send a response message back to MQTT for command acknowledgment."""
     client = mqtt.Client()
-    
+
     if MQTT_USERNAME and MQTT_PASSWORD:
         client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
 
@@ -80,6 +87,11 @@ def on_message(client, userdata, msg):
             setting = setting.strip()
             value = value.strip().lower()
 
+            if setting not in PISUGAR_COMMANDS:
+                logging.error(f"❌ Invalid PiSugar setting: {setting}")
+                send_mqtt_response("set_pisugar", f"Error: Invalid setting {setting}")
+                return
+
             # Convert value for PiSugar compatibility
             if value in ["true", "on", "enable", "enabled"]:
                 value = "true"
@@ -90,6 +102,7 @@ def on_message(client, userdata, msg):
             logging.info(f"🔧 Setting PiSugar {setting} → {value} via MQTT...")
             send_mqtt_response(f"set_pisugar_{setting}", f"Setting {setting} → {value}")
             run_command(command)
+
         except ValueError:
             logging.error(f"❌ Invalid set_pisugar command format: {payload}")
             send_mqtt_response("set_pisugar", "Error: Invalid command format.")
