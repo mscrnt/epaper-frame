@@ -3,6 +3,7 @@ import os
 import json
 import logging
 import subprocess
+import time
 import paho.mqtt.client as mqtt
 from dotenv import load_dotenv
 
@@ -106,13 +107,18 @@ def mqtt_listen():
 
     client.on_message = on_message
 
-    try:
-        client.connect(MQTT_BROKER, MQTT_PORT, 60)
-        client.subscribe(f"{MQTT_TOPIC_PREFIX}/command")
-        logging.info(f"📡 Listening for MQTT commands on {MQTT_TOPIC_PREFIX}/command...")
-        client.loop_forever()
-    except Exception as e:
-        logging.error(f"❌ Failed to start MQTT listener: {e}")
+    while True:
+        try:
+            client.connect(MQTT_BROKER, MQTT_PORT, 60)
+            client.subscribe(f"{MQTT_TOPIC_PREFIX}/command")
+            logging.info(f"📡 Listening for MQTT commands on {MQTT_TOPIC_PREFIX}/command...")
+            client.loop_forever()
+        except Exception as e:
+            logging.error(f"❌ MQTT Connection failed: {e}. Retrying in 10 seconds...")
+            time.sleep(10)  # Wait before retrying
 
 if __name__ == "__main__":
-    mqtt_listen()
+    try:
+        mqtt_listen()
+    except KeyboardInterrupt:
+        logging.info("🛑 MQTT Command Listener Stopped by User.")

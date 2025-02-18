@@ -29,7 +29,6 @@ SENSOR_LABELS = {
     "battery_i": "Battery Current (A)",
     "battery_v": "Battery Voltage (V)",
     "battery_charging": "Battery Charging",
-    "battery_input_protect": "Battery Input Protect",
     "model": "PiSugar Model",
     "battery_led_amount": "Battery LED Count",
     "battery_power_plugged": "Battery USB Plugged",
@@ -40,14 +39,12 @@ SENSOR_LABELS = {
     "rtc_alarm_enabled": "RTC Alarm Enabled",
     "rtc_alarm_time": "RTC Alarm Time",
     "alarm_repeat": "RTC Alarm Repeat (Weekdays)",
-    "button_enable": "Custom Button Enable",
     "safe_shutdown_level": "Safe Shutdown Level (%)",
     "safe_shutdown_delay": "Safe Shutdown Delay (s)",
     "auth_username": "HTTP Auth Username",
     "anti_mistouch": "Anti-Mistouch Protection",
     "soft_poweroff": "Software Poweroff Enabled",
     "temperature": "Device Temperature (°C)",
-    "input_protect": "Battery Hardware Protect",
 }
 
 def run_command(command):
