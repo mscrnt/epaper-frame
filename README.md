@@ -74,8 +74,6 @@ USE_TKINTER=false   # Set to "true" for GUI mode
 SHUTDOWN_AFTER_RUN=true  # Set to "true" to shutdown after displaying the image
 MQTT_BROKER=homeassistant.local
 MQTT_PORT=1883
-MQTT_USERNAME=mqtt_user
-MQTT_PASSWORD=mqtt_password
 MQTT_TOPIC_PREFIX=epaper_frame
 ```
 
