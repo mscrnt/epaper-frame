@@ -165,6 +165,10 @@ User=kenneth
 [Install]
 WantedBy=multi-user.target
 ```
+Or copy the mqtt_command_listener.service file from the project root to `/etc/systemd/system/`.
+```bash
+sudo cp mqtt_command_listener.service /etc/systemd/system/
+```
 Enable & start:
 ```bash
 sudo systemctl enable mqtt_command_listener.service
@@ -190,5 +194,5 @@ crontab -e
 ```
 Add:
 ```
-@reboot /bin/bash /home/kenneth/epaper-frame/run_update_and_display.sh
+@reboot /bin/bash /path/to/run_update_and_display.sh
 ```
