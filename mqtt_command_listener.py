@@ -22,6 +22,7 @@ MQTT_USERNAME = os.getenv("MQTT_USERNAME", None)
 MQTT_PASSWORD = os.getenv("MQTT_PASSWORD", None)
 MQTT_TOPIC_PREFIX = os.getenv("MQTT_TOPIC_PREFIX", "epaper_frame")
 IMAGE_DIR = os.getenv("LOCAL_IMAGE_DIR", "/mnt/photos")
+SCRIPT_DIR = "/home/kenneth/epaper-frame"
 
 # ✅ Valid PiSugar Commands
 PISUGAR_COMMANDS = {
@@ -68,6 +69,11 @@ def on_message(client, userdata, msg):
         send_mqtt_response("display", "Updating display...")
         run_command("python3 /home/kenneth/epaper-frame/display.py")
 
+    elif payload == "update_display":
+        logging.info("🔄 Running `run_update_and_display.sh` via MQTT...")
+        send_mqtt_response("update_display", "Running update and display script...")
+        run_command(f"bash {SCRIPT_DIR}/run_update_and_display.sh")
+
     elif payload.startswith("set_image:"):
         image_name = payload.replace("set_image:", "").strip()
         image_path = os.path.join(IMAGE_DIR, image_name)
@@ -112,7 +118,7 @@ def on_message(client, userdata, msg):
         send_mqtt_response("unknown", "Error: Unknown command.")
 
 def mqtt_listen():
-    """Listen for MQTT commands (shutdown, display, set_image, set_pisugar)."""
+    """Listen for MQTT commands (shutdown, display, set_image, update_display, set_pisugar)."""
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 
     if MQTT_USERNAME and MQTT_PASSWORD:
