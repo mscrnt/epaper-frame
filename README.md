@@ -158,14 +158,17 @@ Description=E-Paper MQTT Command Listener
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/python3 /home/kenneth/epaper-frame/mqtt_command_listener.py
+ExecStart=/usr/bin/python3 /path/to/mqtt_command_listener.py
 Restart=always
 User=kenneth
 
 [Install]
 WantedBy=multi-user.target
 ```
+> **🔹 Important:** Replace `/path/to/` with the **actual path** to your `mqtt_command_listener.py` file.
+
 Or copy the mqtt_command_listener.service file from the project root to `/etc/systemd/system/`.
+
 ```bash
 sudo cp mqtt_command_listener.service /etc/systemd/system/
 ```
