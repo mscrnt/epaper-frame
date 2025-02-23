@@ -6,6 +6,7 @@ from PIL import Image, ImageOps
 from config import CONFIG
 from image_source import get_random_image
 import os
+import mqtt_update
 
 # Import appropriate ePaper display driver dynamically
 if CONFIG["USE_SIMULATOR"]:
@@ -119,14 +120,17 @@ def main():
     """Main function to handle image selection, processing, and display."""
     print(f"📺 Using Display: {CONFIG['DISPLAY_MODEL']}, Resolution: {CONFIG['TARGET_SIZE']}, Simulator: {CONFIG['USE_SIMULATOR']}")
 
-    image_data = get_random_image()
+    image_data, image_title = get_random_image()
     if image_data is None:
         print("❌ No image to display. Exiting.")
         return
     
-    # Log the displayed image
-    if isinstance(image_data, str):
-        log_displayed_image(image_data)
+    # Publish MQTT update with the image title
+    try:
+        mqtt_update.publish_mqtt("last_image", image_title)
+        print(f"🖼️ Published MQTT update for last_image: {image_title}")
+    except Exception as e:
+        print(f"❌ Failed to publish MQTT update: {e}")
 
     img = preprocess_image(image_data)
     if img is None:

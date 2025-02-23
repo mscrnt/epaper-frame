@@ -123,30 +123,10 @@ def publish_mqtt(topic, payload, retain=True):
     except Exception as e:
         logging.error(f"❌ Failed to send MQTT message: {e}")
 
-def get_last_displayed_image():
-    """Extract the last image displayed from the log file, preserving spaces."""
-    if not os.path.exists(LOG_FILE):
-        logging.error(f"❌ Log file not found: {LOG_FILE}")
-        return "Unknown"
-
-    last_image = "Unknown"
-    try:
-        with open(LOG_FILE, "r") as log_file:
-            for line in log_file:
-                if "🖼️ Last Image Displayed:" in line:
-                    last_image = line.split("🖼️ Last Image Displayed: ")[1].strip()
-    except Exception as e:
-        logging.error(f"❌ Error reading log file: {e}")
-
-    return last_image
 
 if __name__ == "__main__":
     # ✅ Retrieve values automatically
-    last_image = get_last_displayed_image()
     pisugar_status = get_pisugar_status()
-
-    # ✅ Send last displayed image
-    publish_mqtt("last_image", last_image)
 
     # ✅ Send each PiSugar metric separately
     for key, value in pisugar_status.items():

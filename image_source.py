@@ -90,22 +90,28 @@ def get_local_image_files():
         return []
 
 def get_random_image():
-    """Fetch a random image from Google Drive or local storage."""
+    """Fetch a random image from the selected source.
+    
+    Returns:
+        A tuple (image_data, image_title).
+        - For Drive images, image_data is a BytesIO stream and image_title is the Drive file name.
+        - For local images, image_data is the file path and image_title is the basename.
+    """
     if CONFIG["IMAGE_SOURCE"] == "drive":
         images = get_drive_image_files()
         if images:
             selected = random.choice(images)
             logging.info(f"📂 Selected Drive image: {selected['name']}")
-            return fetch_drive_image(selected["id"])
-
-        logging.warning("⚠ No images found in Google Drive or internet unavailable. Switching to local storage.")
+            image_data = fetch_drive_image(selected["id"])
+            return image_data, selected["name"]
+        logging.warning("⚠ No images found in Google Drive. Switching to local storage.")
 
     # Fallback to local storage
     images = get_local_image_files()
     if images:
         selected = random.choice(images)
         logging.info(f"🖼 Selected Local image: {selected}")
-        return selected  # File path
+        return selected, os.path.basename(selected)
 
     logging.error("❌ No images found in both Google Drive and local storage.")
-    return None
+    return None, None
