@@ -12,15 +12,13 @@ echo "🚀 Running ePaper update and display script..." | tee -a "$LOG_FILE"
 cd "$PROJECT_DIR" || { echo "❌ Failed to navigate to project directory." | tee -a "$LOG_FILE"; exit 1; }
 
 # Update the PiSugar auto wake time
+chmod +x /home/kenneth/epaper-frame/update_wake_time.sh >> "$LOG_FILE" 2>&1
 echo "⏳ Setting next wake time..." | tee -a "$LOG_FILE"
 /home/kenneth/epaper-frame/update_wake_time.sh >> "$LOG_FILE" 2>&1
 
 # Run update script
 echo "🔄 Updating project..." | tee -a "$LOG_FILE"
 /home/kenneth/epaper-frame/update.sh >> "$LOG_FILE" 2>&1
-
-# Make sure update_wake_time.sh is executable
-chmod +x /home/kenneth/epaper-frame/update_wake_time.sh >> "$LOG_FILE" 2>&1
 
 # Run display script
 echo "📺 Starting display.py..." | tee -a "$LOG_FILE"
