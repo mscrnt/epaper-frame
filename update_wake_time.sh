@@ -17,6 +17,6 @@ echo "Setting RTC wakeup alarm to: $NEW_WAKE_TIME"
 # Set the RTC wakeup alarm using the rtc command via netcat
 # The command format is: rtc_alarm_set [ISO8601 time string] [repeat]
 # If you don't need a repeating alarm, you can omit the repeat argument
-echo "rtc_alarm_set $NEW_WAKE_TIME" | nc -q 0 127.0.0.1 8423
+echo "rtc_alarm_set $NEW_WAKE_TIME" 127 | nc -q 0 127.0.0.1 8423
 
 echo "✅ RTC wakeup alarm set successfully!"
