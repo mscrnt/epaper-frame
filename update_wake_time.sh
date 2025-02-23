@@ -8,7 +8,7 @@ echo "Syncing RTC with web time..."
 echo "rtc_web" | nc -q 0 127.0.0.1 8423
 
 # Optional: wait a couple seconds to ensure the sync is complete
-sleep 5
+sleep 2
 
 # Convert the offset from minutes to seconds
 OFFSET_SECONDS=$((OFFSET_MINUTES * 60))
